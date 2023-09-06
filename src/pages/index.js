@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import CustomeHeader from "../components/customeHeader";
 import { Grid } from "@mui/material";
 import Box from "@mui/material/Box";
@@ -7,9 +7,50 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import Checkbox from "@mui/material/Checkbox";
+import { api } from "../utils/api";
+import { useRouter } from "next/router";
 
 const Home = () => {
-  const label = { inputProps: { "aria-label": "Checkbox demo" } };
+  useEffect(() => {
+    if (localStorage.getItem("user")) {
+      router.push("./lineups");
+    }
+  }, []);
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+  });
+  const router = useRouter();
+  console.log("formData", formData);
+
+  const handleInputChange = (event) => {
+    const { name, value, type, checked } = event.target;
+    const newValue = type === "checkbox" ? checked : value;
+    setFormData((prevData) => ({ ...prevData, [name]: newValue }));
+  };
+
+  const handleSubmit = () => {
+    if (!formData.username && !formData.password) {
+      alert("Enter valid Email & Password");
+    } else {
+      api
+        .userLogin({
+          email: formData.username,
+          password_hash: formData.password,
+        })
+        .then((res) => {
+          if (res.accessToken) {
+            router.push("./lineups");
+            localStorage.setItem("accessToken", res.accessToken);
+            localStorage.setItem("user", JSON.stringify(res.user));
+          }
+        })
+        .catch((err) => {
+          console.log("error", err);
+        });
+    }
+  };
+
   return (
     <>
       <CustomeHeader />
@@ -45,6 +86,7 @@ const Home = () => {
             Username
           </Typography>
           <TextField
+            required
             sx={{
               mt: 1,
               width: "40%",
@@ -71,7 +113,10 @@ const Home = () => {
               },
             }}
             id="outlined-basic"
+            name="username"
             variant="outlined"
+            value={formData.username}
+            onChange={handleInputChange}
           />
           <Typography
             sx={{ fontSize: 14, mt: 3, fontWeight: "bold" }}
@@ -80,6 +125,7 @@ const Home = () => {
             Password
           </Typography>
           <TextField
+            required
             sx={{
               mt: 1,
               width: "40%",
@@ -106,40 +152,28 @@ const Home = () => {
               },
             }}
             id="outlined-basic"
+            name="password"
             variant="outlined"
+            type="password"
+            value={formData.password}
+            onChange={handleInputChange}
           />
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Checkbox
+          <Box sx={{ mt: 2 }}>
+            <Button
               sx={{
-                pl: 0,
-                color: "#fdb735", // Border color
-                "&.Mui-checked": {
-                  color: "#fdb735", // Fill color when checked
-                  "&:hover": {
-                    backgroundColor: "rgba(253, 183, 53, 0.04)", // Background color when checked and hovered
-                  },
+                backgroundColor: "#fdb735",
+                color: "#000",
+                "&:hover": {
+                  backgroundColor: "#152b55",
+                  color: "#fff",
                 },
               }}
-              {...label}
-              defaultChecked
-            />
-            <Typography sx={{ fontSize: 14 }} color="#000">
-              Remember Me
-            </Typography>
+              variant="contained"
+              onClick={handleSubmit}
+            >
+              Login
+            </Button>
           </Box>
-          <Button
-            sx={{
-              backgroundColor: "#fdb735",
-              color: "#000",
-              "&:hover": {
-                backgroundColor: "#152b55",
-                color: "#fff", // Background color on hover
-              },
-            }}
-            variant="contained"
-          >
-            Login
-          </Button>
         </Box>
       </Grid>
     </>
