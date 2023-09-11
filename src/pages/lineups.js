@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import CustomHeader from "../components/customeHeader";
 import soccerTeamNames from "../../teams";
 import soccerPlayers from "../../players";
@@ -208,8 +208,32 @@ const Lineups = () => {
   const [defensive, setDefensive] = React.useState([]);
   const [goalie, setGoalie] = React.useState([]);
   const router = useRouter();
-  console.log("offensive", offensive);
-
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [tableDataOffensive, setTableDataOffensive] = useState([
+    { LW: "", C: "", RW: "" },
+    { LW: "", C: "", RW: "" },
+    { LW: "", C: "", RW: "" },
+    { LW: "", C: "", RW: "" },
+  ]);
+  const [tableDataDefensive, setTableDataDefensive] = useState([
+    { LD: "", RD: "" },
+    { LD: "", RD: "" },
+    { LD: "", RD: "" },
+  ]);
+  const [tableDataIstPowerplay, setTableDataIstPowerplay] = useState([
+    { LW: "", C: "", RW: "" },
+  ]);
+  const [tableDataIstPowerplayLDRD, setTableDataIstPowerplayLDRD] = useState([
+    { LD: "", RD: "" },
+  ]);
+  const [tableData2ndPowerplay, setTableData2ndPowerplay] = useState([
+    { LW: "", C: "", RW: "" },
+  ]);
+  const [tableData2ndPowerplayLDRD, setTableData2ndPowerplayLDRD] = useState([
+    { LD: "", RD: "" },
+  ]);
+  const [tableDataGoalie, setTableDataGoalie] = useState([{ SG: "", BG: "" }]);
+  console.log("tableData2ndPowerplayLDRD", tableData2ndPowerplayLDRD);
   useEffect(() => {
     if (allPlayers.length > 0) {
       const offensivePlayers = [];
@@ -244,8 +268,6 @@ const Lineups = () => {
     setSelectedTeam(selectedTeamName);
 
     const selectedTeamObject = Teams.find((team) => {
-      console.log("selectedTeamName>>>", selectedTeamName, team.name);
-
       return team.name === selectedTeamName;
     });
     console.log("selectedTeamName>>>1", selectedTeamObject);
@@ -274,6 +296,63 @@ const Lineups = () => {
         console.log("error", err);
       });
   }, []);
+
+  const handleDragStart = (e, item) => {
+    e.dataTransfer.setData("text/plain", item);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e, position, rowIndex, targetState) => {
+    e.preventDefault();
+
+    const item = e.dataTransfer.getData("text/plain");
+    if (targetState === "offensive") {
+      setTableDataOffensive((prevTableData) => {
+        const updatedTableData = [...prevTableData];
+        updatedTableData[rowIndex][position] = item;
+        return updatedTableData;
+      });
+    } else if (targetState === "defensive") {
+      setTableDataDefensive((prevTableData) => {
+        const updatedTableData = [...prevTableData];
+        updatedTableData[rowIndex][position] = item;
+        return updatedTableData;
+      });
+    } else if (targetState === "istPowerplay") {
+      setTableDataIstPowerplay((prevTableData) => {
+        const updatedTableData = [...prevTableData];
+        updatedTableData[rowIndex][position] = item;
+        return updatedTableData;
+      });
+    } else if (targetState === "istPowerplayLDRD") {
+      setTableDataIstPowerplayLDRD((prevTableData) => {
+        const updatedTableData = [...prevTableData];
+        updatedTableData[rowIndex][position] = item;
+        return updatedTableData;
+      });
+    } else if (targetState === "2ndPowerplay") {
+      setTableData2ndPowerplay((prevTableData) => {
+        const updatedTableData = [...prevTableData];
+        updatedTableData[rowIndex][position] = item;
+        return updatedTableData;
+      });
+    } else if (targetState === "2ndPowerplayLDRD") {
+      setTableData2ndPowerplayLDRD((prevTableData) => {
+        const updatedTableData = [...prevTableData];
+        updatedTableData[rowIndex][position] = item;
+        return updatedTableData;
+      });
+    } else if (targetState === "goalie") {
+      setTableDataGoalie((prevTableData) => {
+        const updatedTableData = [...prevTableData];
+        updatedTableData[rowIndex][position] = item;
+        return updatedTableData;
+      });
+    }
+  };
 
   return (
     <>
@@ -339,7 +418,7 @@ const Lineups = () => {
           sm={12}
           xs={12}
         >
-          <Grid>
+          <Grid sx={{ width: "100%" }}>
             {/* Offensive Line */}
             <Box
               sx={{ display: "flex", justifyContent: "flex-end", mr: 2, mb: 2 }}
@@ -375,6 +454,10 @@ const Lineups = () => {
                         // padding: "0.5rem",
                       },
                     }}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, item)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, item)}
                   >
                     <Typography sx={{ fontSize: 14 }}>{item}</Typography>
                   </Card>
@@ -390,7 +473,7 @@ const Lineups = () => {
                       sx={{
                         color: "#fff",
                         textAlign: "center",
-                        border: "1 px solid #152b55",
+                        border: "1px solid #152b55",
                       }}
                     >
                       LW
@@ -404,30 +487,46 @@ const Lineups = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {[1, 2, 3, 4].map((item, index) => {
-                    return (
-                      <TableRow key={index}>
-                        <TableCell
-                          sx={{
-                            border: "1px solid #152b55",
-                            textAlign: "center",
-                          }}
-                        ></TableCell>
-                        <TableCell
-                          sx={{
-                            border: "1px solid #152b55",
-                            textAlign: "center",
-                          }}
-                        ></TableCell>
-                        <TableCell
-                          sx={{
-                            border: "1px solid #152b55",
-                            textAlign: "center",
-                          }}
-                        ></TableCell>
-                      </TableRow>
-                    );
-                  })}
+                  {tableDataOffensive.map((rowData, rowIndex) => (
+                    <TableRow key={rowIndex}>
+                      <TableCell
+                        onDragOver={handleDragOver}
+                        onDrop={(e) =>
+                          handleDrop(e, "LW", rowIndex, "offensive")
+                        }
+                        sx={{
+                          border: "1px solid #152b55",
+                          textAlign: "center",
+                        }}
+                      >
+                        {rowData.LW}
+                      </TableCell>
+                      <TableCell
+                        onDragOver={handleDragOver}
+                        onDrop={(e) =>
+                          handleDrop(e, "C", rowIndex, "offensive")
+                        }
+                        sx={{
+                          border: "1px solid #152b55",
+                          textAlign: "center",
+                        }}
+                      >
+                        {rowData.C}
+                      </TableCell>
+                      <TableCell
+                        onDragOver={handleDragOver}
+                        onDrop={(e) =>
+                          handleDrop(e, "RW", rowIndex, "offensive")
+                        }
+                        sx={{
+                          border: "1px solid #152b55",
+                          textAlign: "center",
+                        }}
+                      >
+                        {rowData.RW}
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -457,6 +556,10 @@ const Lineups = () => {
                         padding: "0.5rem",
                       },
                     }}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, item)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, item)}
                   >
                     <Typography sx={{ fontSize: 14 }}>{item}</Typography>
                   </Card>
@@ -482,9 +585,34 @@ const Lineups = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  <CustomeTableRowDefensive />
-                  <CustomeTableRowDefensive />
-                  <CustomeTableRowDefensive />
+                  {tableDataDefensive.map((rowData, rowIndex) => (
+                    <TableRow key={rowIndex}>
+                      <TableCell
+                        onDragOver={handleDragOver}
+                        onDrop={(e) =>
+                          handleDrop(e, "LD", rowIndex, "defensive")
+                        }
+                        sx={{
+                          border: "1px solid #152b55",
+                          textAlign: "center",
+                        }}
+                      >
+                        {rowData.LW}
+                      </TableCell>
+                      <TableCell
+                        onDragOver={handleDragOver}
+                        onDrop={(e) =>
+                          handleDrop(e, "RD", rowIndex, "defensive")
+                        }
+                        sx={{
+                          border: "1px solid #152b55",
+                          textAlign: "center",
+                        }}
+                      >
+                        {rowData.C}
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -500,25 +628,29 @@ const Lineups = () => {
                 justifyContent: "center",
               }}
             >
-              {soccerPlayers.map((item) => {
-                if (item.position.toLowerCase() === "defensive")
-                  return (
-                    <Card
-                      sx={{
-                        minWidth: 200,
-                        p: 1,
-                        m: 1,
-                        textAlign: "center",
-                        "@media (max-width: 600px)": {
-                          minWidth: "auto", // Adjust the width for small screens
-                          padding: "0.5rem", // Adjust padding for small screens
-                        },
-                      }}
-                    >
-                      <Typography sx={{ fontSize: 14 }}>{item.name}</Typography>
-                    </Card>
-                  );
-              })}
+              {allPlayers.map((item) => (
+                <Card
+                  key={item.person.id}
+                  sx={{
+                    minWidth: 200,
+                    p: 1,
+                    m: 1,
+                    textAlign: "center",
+                    "@media (max-width: 600px)": {
+                      minWidth: "auto",
+                      padding: "0.5rem",
+                    },
+                  }}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, item.person.fullName)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, item.person.fullName)}
+                >
+                  <Typography sx={{ fontSize: 14 }}>
+                    {item.person.fullName}
+                  </Typography>
+                </Card>
+              ))}
             </Box>
             <TableContainer component={Paper}>
               <Table sx={{ border: "1px solid #152b55" }}>
@@ -542,7 +674,46 @@ const Lineups = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  <CustomeTableRowOffensive />
+                  {tableDataIstPowerplay.map((rowData, rowIndex) => (
+                    <TableRow key={rowIndex}>
+                      <TableCell
+                        onDragOver={handleDragOver}
+                        onDrop={(e) =>
+                          handleDrop(e, "LW", rowIndex, "istPowerplay")
+                        }
+                        sx={{
+                          border: "1px solid #152b55",
+                          textAlign: "center",
+                        }}
+                      >
+                        {rowData.LW}
+                      </TableCell>
+                      <TableCell
+                        onDragOver={handleDragOver}
+                        onDrop={(e) =>
+                          handleDrop(e, "C", rowIndex, "istPowerplay")
+                        }
+                        sx={{
+                          border: "1px solid #152b55",
+                          textAlign: "center",
+                        }}
+                      >
+                        {rowData.C}
+                      </TableCell>
+                      <TableCell
+                        onDragOver={handleDragOver}
+                        onDrop={(e) =>
+                          handleDrop(e, "RW", rowIndex, "istPowerplay")
+                        }
+                        sx={{
+                          border: "1px solid #152b55",
+                          textAlign: "center",
+                        }}
+                      >
+                        {rowData.RW}
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -565,7 +736,34 @@ const Lineups = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  <CustomeTableRowDefensive />
+                  {tableDataIstPowerplayLDRD.map((rowData, rowIndex) => (
+                    <TableRow key={rowIndex}>
+                      <TableCell
+                        onDragOver={handleDragOver}
+                        onDrop={(e) =>
+                          handleDrop(e, "LD", rowIndex, "istPowerplayLDRD")
+                        }
+                        sx={{
+                          border: "1px solid #152b55",
+                          textAlign: "center",
+                        }}
+                      >
+                        {rowData.LD}
+                      </TableCell>
+                      <TableCell
+                        onDragOver={handleDragOver}
+                        onDrop={(e) =>
+                          handleDrop(e, "RD", rowIndex, "istPowerplayLDRD")
+                        }
+                        sx={{
+                          border: "1px solid #152b55",
+                          textAlign: "center",
+                        }}
+                      >
+                        {rowData.RD}
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -581,25 +779,29 @@ const Lineups = () => {
                 justifyContent: "center",
               }}
             >
-              {soccerPlayers.map((item) => {
-                if (item.position.toLowerCase() === "defensive")
-                  return (
-                    <Card
-                      sx={{
-                        minWidth: 200,
-                        p: 1,
-                        m: 1,
-                        textAlign: "center",
-                        "@media (max-width: 600px)": {
-                          minWidth: "auto", // Adjust the width for small screens
-                          padding: "0.5rem", // Adjust padding for small screens
-                        },
-                      }}
-                    >
-                      <Typography sx={{ fontSize: 14 }}>{item.name}</Typography>
-                    </Card>
-                  );
-              })}
+              {allPlayers.map((item) => (
+                <Card
+                  key={item.person.id}
+                  sx={{
+                    minWidth: 200,
+                    p: 1,
+                    m: 1,
+                    textAlign: "center",
+                    "@media (max-width: 600px)": {
+                      minWidth: "auto",
+                      padding: "0.5rem",
+                    },
+                  }}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, item.person.fullName)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, item.person.fullName)}
+                >
+                  <Typography sx={{ fontSize: 14 }}>
+                    {item.person.fullName}
+                  </Typography>
+                </Card>
+              ))}
             </Box>
             <TableContainer component={Paper}>
               <Table sx={{ border: "1px solid #152b55" }}>
@@ -623,7 +825,46 @@ const Lineups = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  <CustomeTableRowOffensive />
+                  {tableData2ndPowerplay.map((rowData, rowIndex) => (
+                    <TableRow key={rowIndex}>
+                      <TableCell
+                        onDragOver={handleDragOver}
+                        onDrop={(e) =>
+                          handleDrop(e, "LW", rowIndex, "2ndPowerplay")
+                        }
+                        sx={{
+                          border: "1px solid #152b55",
+                          textAlign: "center",
+                        }}
+                      >
+                        {rowData.LW}
+                      </TableCell>
+                      <TableCell
+                        onDragOver={handleDragOver}
+                        onDrop={(e) =>
+                          handleDrop(e, "C", rowIndex, "2ndPowerplay")
+                        }
+                        sx={{
+                          border: "1px solid #152b55",
+                          textAlign: "center",
+                        }}
+                      >
+                        {rowData.C}
+                      </TableCell>
+                      <TableCell
+                        onDragOver={handleDragOver}
+                        onDrop={(e) =>
+                          handleDrop(e, "RW", rowIndex, "2ndPowerplay")
+                        }
+                        sx={{
+                          border: "1px solid #152b55",
+                          textAlign: "center",
+                        }}
+                      >
+                        {rowData.RW}
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -646,7 +887,34 @@ const Lineups = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  <CustomeTableRowDefensive />
+                  {tableData2ndPowerplayLDRD.map((rowData, rowIndex) => (
+                    <TableRow key={rowIndex}>
+                      <TableCell
+                        onDragOver={handleDragOver}
+                        onDrop={(e) =>
+                          handleDrop(e, "LD", rowIndex, "2ndPowerplayLDRD")
+                        }
+                        sx={{
+                          border: "1px solid #152b55",
+                          textAlign: "center",
+                        }}
+                      >
+                        {rowData.LD}
+                      </TableCell>
+                      <TableCell
+                        onDragOver={handleDragOver}
+                        onDrop={(e) =>
+                          handleDrop(e, "RD", rowIndex, "2ndPowerplayLDRD")
+                        }
+                        sx={{
+                          border: "1px solid #152b55",
+                          textAlign: "center",
+                        }}
+                      >
+                        {rowData.RD}
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -676,6 +944,10 @@ const Lineups = () => {
                         padding: "0.5rem",
                       },
                     }}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, item)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, item)}
                   >
                     <Typography sx={{ fontSize: 14 }}>{item}</Typography>
                   </Card>
@@ -701,7 +973,30 @@ const Lineups = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  <CustomeTableRowGoalies />
+                  {tableDataGoalie.map((rowData, rowIndex) => (
+                    <TableRow key={rowIndex}>
+                      <TableCell
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, "SG", rowIndex, "goalie")}
+                        sx={{
+                          border: "1px solid #152b55",
+                          textAlign: "center",
+                        }}
+                      >
+                        {rowData.SG}
+                      </TableCell>
+                      <TableCell
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, "BG", rowIndex, "goalie")}
+                        sx={{
+                          border: "1px solid #152b55",
+                          textAlign: "center",
+                        }}
+                      >
+                        {rowData.BG}
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </TableContainer>
